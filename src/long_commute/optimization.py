@@ -13,6 +13,7 @@ from .routing import departure_candidates, earliest_arrivals
 
 
 def _station_stop_set(station: StationMatch) -> set[str]:
+    """Return the stop_ids associated with a station match."""
     return set(station.stop_ids)
 
 
@@ -22,6 +23,7 @@ def _best_duration_between(
     connections,
     transfers,
 ) -> tuple[int, int, int] | None:
+    """Find the shortest scheduled travel time for one ordered station pair."""
     origin_stops = _station_stop_set(origin)
     destination_stops = _station_stop_set(destination)
 
@@ -51,6 +53,7 @@ def find_longest_fastest_pair(
     service_date: date,
     top_n: int = 5,
 ) -> tuple[PairResult | None, list[PairResult]]:
+    """Rank ordered station pairs by their minimum achievable journey duration."""
     connections, transfers = build_connections(gtfs_dir, service_date)
     if not connections:
         return None, []
@@ -85,6 +88,7 @@ def find_longest_fastest_pair(
 
 
 def write_results_json(path: Path, best: PairResult | None, top_results: list[PairResult]) -> None:
+    """Write best-pair and ranked candidate results to JSON."""
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "best": asdict(best) if best else None,
@@ -100,6 +104,7 @@ def write_results_json(path: Path, best: PairResult | None, top_results: list[Pa
 
 
 def write_results_csv(path: Path, top_results: list[PairResult]) -> None:
+    """Write ranked candidate pair results to CSV."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as fh:
         writer = csv.DictWriter(
@@ -123,6 +128,7 @@ def write_results_csv(path: Path, top_results: list[PairResult]) -> None:
 
 
 def load_station_matches(stations_path: Path) -> list[StationMatch]:
+    """Load previously matched station records from CSV."""
     stations: list[StationMatch] = []
     with stations_path.open("r", encoding="utf-8", newline="") as fh:
         for row in csv.DictReader(fh):

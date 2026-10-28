@@ -7,6 +7,7 @@ from .models import Connection, Transfer
 
 
 def _transfers_by_from_stop(transfers: list[Transfer]) -> dict[str, list[tuple[str, int]]]:
+    """Index transfers by origin stop for quick relaxation."""
     grouped: dict[str, list[tuple[str, int]]] = defaultdict(list)
     for transfer in transfers:
         grouped[transfer.from_stop_id].append((transfer.to_stop_id, transfer.min_transfer_secs))
@@ -14,6 +15,7 @@ def _transfers_by_from_stop(transfers: list[Transfer]) -> dict[str, list[tuple[s
 
 
 def _relax_transfers(arrivals: dict[str, float], start_stop: str, transfer_map: dict[str, list[tuple[str, int]]]) -> None:
+    """Propagate improved arrival times through transfer edges."""
     queue = deque([start_stop])
     while queue:
         current = queue.popleft()
@@ -31,6 +33,7 @@ def earliest_arrivals(
     origin_stop_ids: set[str],
     departure_secs: int,
 ) -> dict[str, int]:
+    """Compute earliest arrivals from origin stops at a departure time."""
     arrivals: dict[str, float] = defaultdict(lambda: inf)
     transfer_map = _transfers_by_from_stop(transfers)
 
@@ -50,6 +53,7 @@ def earliest_arrivals(
 
 
 def departure_candidates(connections: list[Connection], origin_stop_ids: set[str]) -> list[int]:
+    """Return departure times worth evaluating for an origin station."""
     candidates = {0}
     for connection in connections:
         if connection.from_stop_id in origin_stop_ids:

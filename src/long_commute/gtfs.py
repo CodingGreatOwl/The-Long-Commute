@@ -10,11 +10,13 @@ from .timeutil import hhmmss_to_secs
 
 
 def _read_csv(path: Path) -> list[dict[str, str]]:
+    """Read a UTF-8 CSV file into a list of row dictionaries."""
     with path.open("r", encoding="utf-8", newline="") as fh:
         return list(csv.DictReader(fh))
 
 
 def load_stops(gtfs_dir: Path) -> dict[str, Stop]:
+    """Load GTFS stops keyed by stop_id."""
     rows = _read_csv(gtfs_dir / "stops.txt")
     stops: dict[str, Stop] = {}
     for row in rows:
@@ -30,6 +32,7 @@ def load_stops(gtfs_dir: Path) -> dict[str, Stop]:
 
 
 def load_routes(gtfs_dir: Path) -> dict[str, Route]:
+    """Load GTFS routes keyed by route_id."""
     rows = _read_csv(gtfs_dir / "routes.txt")
     return {
         row["route_id"]: Route(route_id=row["route_id"], route_type=int(row["route_type"]))
@@ -38,6 +41,7 @@ def load_routes(gtfs_dir: Path) -> dict[str, Route]:
 
 
 def load_trips(gtfs_dir: Path) -> dict[str, Trip]:
+    """Load GTFS trips keyed by trip_id."""
     rows = _read_csv(gtfs_dir / "trips.txt")
     return {
         row["trip_id"]: Trip(trip_id=row["trip_id"], route_id=row["route_id"], service_id=row["service_id"])
@@ -46,6 +50,7 @@ def load_trips(gtfs_dir: Path) -> dict[str, Trip]:
 
 
 def load_stop_times(gtfs_dir: Path) -> dict[str, list[StopTime]]:
+    """Load and sequence stop times for each trip."""
     rows = _read_csv(gtfs_dir / "stop_times.txt")
     grouped: dict[str, list[StopTime]] = defaultdict(list)
     for row in rows:
@@ -64,6 +69,7 @@ def load_stop_times(gtfs_dir: Path) -> dict[str, list[StopTime]]:
 
 
 def load_transfers(gtfs_dir: Path) -> list[Transfer]:
+    """Load transfer rules from transfers.txt when present."""
     path = gtfs_dir / "transfers.txt"
     if not path.exists():
         return []
@@ -83,10 +89,12 @@ def load_transfers(gtfs_dir: Path) -> list[Transfer]:
 
 
 def _parse_yyyymmdd(value: str) -> date:
+    """Parse a GTFS YYYYMMDD calendar field into a date."""
     return datetime.strptime(value, "%Y%m%d").date()
 
 
 def active_service_ids(gtfs_dir: Path, service_date: date) -> set[str]:
+    """Return service_ids active on a specific date, including exceptions."""
     services: set[str] = set()
     calendar_path = gtfs_dir / "calendar.txt"
     if calendar_path.exists():
@@ -113,6 +121,7 @@ def active_service_ids(gtfs_dir: Path, service_date: date) -> set[str]:
 
 
 def train_trip_ids(gtfs_dir: Path) -> set[str]:
+    """Return trip_ids whose routes are classified as train/rail services."""
     routes = load_routes(gtfs_dir)
     trips = load_trips(gtfs_dir)
     return {
@@ -123,6 +132,7 @@ def train_trip_ids(gtfs_dir: Path) -> set[str]:
 
 
 def build_connections(gtfs_dir: Path, service_date: date) -> tuple[list[Connection], list[Transfer]]:
+    """Build train connections and transfers for a given service date."""
     trips = load_trips(gtfs_dir)
     stop_times = load_stop_times(gtfs_dir)
     active_services = active_service_ids(gtfs_dir, service_date)

@@ -19,6 +19,7 @@ class MatchReport:
 
 
 def normalize_name(name: str) -> str:
+    """Normalize station names for robust deterministic matching."""
     text = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
     text = text.lower().strip()
     text = re.sub(r"[^a-z0-9]+", " ", text)
@@ -26,6 +27,7 @@ def normalize_name(name: str) -> str:
 
 
 def _train_stop_ids(gtfs_dir: Path) -> set[str]:
+    """Collect stop_ids visited by train-eligible trips."""
     trip_ids = train_trip_ids(gtfs_dir)
     stop_times = load_stop_times(gtfs_dir)
     train_stops: set[str] = set()
@@ -36,6 +38,7 @@ def _train_stop_ids(gtfs_dir: Path) -> set[str]:
 
 
 def _station_groups(stops: dict[str, Stop], allowed_stop_ids: set[str]) -> dict[str, StationMatch]:
+    """Group allowed platform stops into parent-station records."""
     grouped: dict[str, list[str]] = {}
     names: dict[str, str] = {}
     for stop in stops.values():
@@ -52,6 +55,7 @@ def _station_groups(stops: dict[str, Stop], allowed_stop_ids: set[str]) -> dict[
 
 
 def _load_overrides(overrides_path: Path | None) -> dict[str, str]:
+    """Load normalized-name to station_id manual match overrides."""
     if not overrides_path:
         return {}
     with overrides_path.open("r", encoding="utf-8") as fh:
@@ -60,6 +64,7 @@ def _load_overrides(overrides_path: Path | None) -> dict[str, str]:
 
 
 def load_zvv_stop_list(zvv_stop_list_path: Path) -> list[dict[str, str]]:
+    """Load the official ZVV stop list CSV rows."""
     with zvv_stop_list_path.open("r", encoding="utf-8", newline="") as fh:
         return list(csv.DictReader(fh))
 
@@ -69,6 +74,7 @@ def match_zvv_stations(
     zvv_stop_list_path: Path,
     overrides_path: Path | None = None,
 ) -> tuple[list[StationMatch], MatchReport]:
+    """Match ZVV stops to GTFS train stations and produce a reconciliation report."""
     stops = load_stops(gtfs_dir)
     train_stops = _train_stop_ids(gtfs_dir)
     stations = _station_groups(stops, train_stops)
@@ -125,6 +131,7 @@ def match_zvv_stations(
 
 
 def write_match_outputs(stations: list[StationMatch], report: MatchReport, stations_path: Path, report_path: Path) -> None:
+    """Write validated station list and structured matching report outputs."""
     stations_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
 

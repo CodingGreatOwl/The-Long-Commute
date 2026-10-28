@@ -9,10 +9,12 @@ from .optimization import find_longest_fastest_pair, load_station_matches, write
 
 
 def _parse_date(value: str):
+    """Parse a CLI service date argument in YYYY-MM-DD format."""
     return datetime.strptime(value, "%Y-%m-%d").date()
 
 
 def main() -> None:
+    """Run the command-line interface for matching and analysis workflows."""
     parser = argparse.ArgumentParser(description="Find the longest fastest train journey within ZVV stations")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
