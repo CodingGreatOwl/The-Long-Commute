@@ -57,8 +57,8 @@ def load_stop_times(gtfs_dir: Path) -> dict[str, list[StopTime]]:
         grouped[row["trip_id"]].append(
             StopTime(
                 trip_id=row["trip_id"],
-                arrival_secs=hhmmss_to_secs(row["arrival_time"]),
-                departure_secs=hhmmss_to_secs(row["departure_time"]),
+                    arrival_secs=hhmmss_to_secs(row["arrival_time"]) if row["arrival_time"] else 0,
+                    departure_secs=hhmmss_to_secs(row["departure_time"]) if row["departure_time"] else 0,
                 stop_id=row["stop_id"],
                 stop_sequence=int(row["stop_sequence"]),
             )
